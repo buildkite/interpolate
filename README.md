@@ -28,7 +28,7 @@ func main() {
 	fmt.Println(output)
 }
 
-## Prints: Buildkite... 🦀 🏖
+// Output: Buildkite... 🦀 🏖
 
 ```
 
