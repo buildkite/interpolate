@@ -16,21 +16,16 @@ package main
 
 import (
   "github.com/buildkite/interpolate"
-  "log"
   "fmt"
 )
 
 func main() {
-  env := interpolate.EnvFromSlice([]string{
-    "HELLO_WORLD": "🦀",
-  })
+	env := interpolate.EnvFromSlice([]string{
+		"HELLO_WORLD=🦀",
+	})
 
-  output, err := interpolate.Interpolate(env, "Buildkite... ${HELLO_WORLD} ${ANOTHER_VAR:-🏖})")
-  if err != nil {
-    log.Fatal(err)
-  }
-
-  fmt.Println(output)
+	output, _ := interpolate.Interpolate(env, "Buildkite... ${HELLO_WORLD} ${ANOTHER_VAR:-🏖}")
+	fmt.Println(output)
 }
 
 ## Prints: Buildkite... 🦀 🏖
