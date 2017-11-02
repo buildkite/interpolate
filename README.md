@@ -50,9 +50,6 @@ func main() {
   <dt><code>${parameter:<em>[offset]</em>:<em>[length]</em>}</code></dt>
   <dd><strong>Use the substring of parameter after offset of given length.</strong> A negative number will select from the end of the string. If the offset is out of bounds, an empty string will be substituted. If the length is greater than the length then the entire string will be returned.</dd>
 
-  <dt><code>${parameter:<em>[offset]</em>}</code></dt>
-  <dd>Use the substring of parameter after offset. A negative number will select from the end of the string. If the value is out of bounds, an empty string will be substituted.</dd>
-
   <dt><code>${parameter:?<em>[word]</em>}</code></dt>
   <dd>Indicate Error if Null or Unset. If parameter is unset or null, the expansion of word (or a message indicating it is unset if word is omitted) shall be returned as an error.</dd>
 </dl>
