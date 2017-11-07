@@ -138,8 +138,8 @@ func TestInterpolateIsntGreedy(t *testing.T) {
 		Expected string
 	}{
 		{`echo "ENV_1=test_$BUILDKITE_COMMIT_$BUILDKITE_PARALLEL_JOB"`, `echo "ENV_1=test_456"`},
-		{`echo "ENV_1=test-$BUILDKITE_COMMIT-$BUILDKITE_PARALLEL_JOB"`, `echo "ENV_1=test_cfeeee3fa7fa1a6311723f5cbff95b738ec6e683-456"`},
-		{`echo "ENV_1=test_${BUILDKITE_COMMIT}_${BUILDKITE_PARALLEL_JOB}"`, `echo "ENV_2=test_cfeeee3fa7fa1a6311723f5cbff95b738ec6e683_456"`},
+		{`echo "ENV_1=test-$BUILDKITE_COMMIT-$BUILDKITE_PARALLEL_JOB"`, `echo "ENV_1=test-cfeeee3fa7fa1a6311723f5cbff95b738ec6e683-456"`},
+		{`echo "ENV_1=test_${BUILDKITE_COMMIT}_${BUILDKITE_PARALLEL_JOB}"`, `echo "ENV_1=test_cfeeee3fa7fa1a6311723f5cbff95b738ec6e683_456"`},
 	} {
 		result, err := interpolate.Interpolate(environ, tc.Str)
 		if err != nil {
