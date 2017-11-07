@@ -218,8 +218,9 @@ func BenchmarkBasicInterpolate(b *testing.B) {
 	env := interpolate.EnvFromSlice([]string{
 		"HELLO_WORLD=🦀",
 	})
-	b.ResetTimer()
 
+	b.ReportAllocs()
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		_, _ = interpolate.Interpolate(env, "Buildkite... ${HELLO_WORLD} ${ANOTHER_VAR:-🏖}")
 	}
