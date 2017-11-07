@@ -2,29 +2,33 @@ package interpolate_test
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/buildkite/interpolate"
 )
 
 func ExampleInterpolate() {
-	env := interpolate.EnvFromSlice([]string{
+	env := interpolate.NewSliceEnv([]string{
 		"HELLO_WORLD=🦀",
 	})
 
-	output, _ := interpolate.Interpolate(env, "Buildkite... ${HELLO_WORLD} ${ANOTHER_VAR:-🏖}")
+	output, err := interpolate.Interpolate(env, "Buildkite... ${HELLO_WORLD} ${ANOTHER_VAR:-🏖}")
+	if err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(output)
 
 	// Output: Buildkite... 🦀 🏖
 }
 
 func TestBasicInterpolation(t *testing.T) {
-	environ := map[string]string{
+	environ := interpolate.NewMapEnv(map[string]string{
 		"TEST1": "A test",
 		"TEST2": "Another",
 		"TEST3": "Llamas",
 		"TEST4": "Only one level of $TEST3 interpolation",
-	}
+	})
 
 	for _, tc := range []struct {
 		Str      string
@@ -41,17 +45,45 @@ func TestBasicInterpolation(t *testing.T) {
 		{`${TEST1}, ${Test2}, ${tEST3}`, `A test, , `},
 		{`my$TEST1`, `myA test`},
 		{`$TEST4`, "Only one level of $TEST3 interpolation"},
-
-		// currently failing
-		//{`${TEST4}`, "Only one level of $TEST3 interpolation"},
+		{`${TEST4}`, "Only one level of $TEST3 interpolation"},
 	} {
-		result, err := interpolate.Interpolate(environ, tc.Str)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if result != tc.Expected {
-			t.Fatalf("Test %q failed: Expected substring %q, got %q", tc.Str, tc.Expected, result)
-		}
+		t.Run(tc.Str, func(t *testing.T) {
+			result, err := interpolate.Interpolate(environ, tc.Str)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if result != tc.Expected {
+				t.Fatalf("Test %q failed: Expected substring %q, got %q", tc.Str, tc.Expected, result)
+			}
+		})
+	}
+}
+
+func TestNestedInterpolation(t *testing.T) {
+	environ := interpolate.NewMapEnv(map[string]string{
+		"TEST1": "A test",
+		"TEST2": "Another",
+		"TEST3": "Llamas",
+		"TEST4": "Only one level of $TEST3 interpolation",
+	})
+
+	for _, tc := range []struct {
+		Str      string
+		Expected string
+	}{
+		{`${TEST5:-${TEST6:-$TEST1}}`, "A test"},
+		{`${TEST5:-${TEST2:-$TEST1}}`, "Another"},
+		{`${TEST5:-Some text ${TEST2:-$TEST1} with $TEST3}`, "Some text Another with Llamas"},
+	} {
+		t.Run(tc.Str, func(t *testing.T) {
+			result, err := interpolate.Interpolate(environ, tc.Str)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if result != tc.Expected {
+				t.Fatalf("Test %q failed: Expected substring %q, got %q", tc.Str, tc.Expected, result)
+			}
+		})
 	}
 }
 
@@ -63,6 +95,8 @@ func TestVariablesMustStartWithLetters(t *testing.T) {
 		_, err := interpolate.Interpolate(nil, str)
 		if err == nil {
 			t.Fatalf("Test %q should have resulted in an error", str)
+		} else {
+			t.Log(err)
 		}
 	}
 }
@@ -76,18 +110,20 @@ func TestMissingParameterValuesReturnEmptyStrings(t *testing.T) {
 		`${BUILDKITE_COMMIT:0:7}`,
 		`${BUILDKITE_COMMIT:7:14}`,
 	} {
-		result, err := interpolate.Interpolate(nil, str)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if result != "" {
-			t.Fatalf("Expected empty string, got %q", result)
-		}
+		t.Run(str, func(t *testing.T) {
+			result, err := interpolate.Interpolate(nil, str)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if result != "" {
+				t.Fatalf("Expected empty string, got %q", result)
+			}
+		})
 	}
 }
 
 func TestSubstringsWithOffsets(t *testing.T) {
-	environ := map[string]string{"BUILDKITE_COMMIT": "1adf998e39f647b4b25842f107c6ed9d30a3a7c7"}
+	environ := interpolate.NewMapEnv(map[string]string{"BUILDKITE_COMMIT": "1adf998e39f647b4b25842f107c6ed9d30a3a7c7"})
 
 	for _, tc := range []struct {
 		Str      string
@@ -117,21 +153,23 @@ func TestSubstringsWithOffsets(t *testing.T) {
 		{`${BUILDKITE_COMMIT:0:-128}`, ``},
 		{`${BUILDKITE_COMMIT:7:-128}`, ``},
 	} {
-		result, err := interpolate.Interpolate(environ, tc.Str)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if result != tc.Expected {
-			t.Fatalf("Expected substring %q, got %q", tc.Expected, result)
-		}
+		t.Run(tc.Str, func(t *testing.T) {
+			result, err := interpolate.Interpolate(environ, tc.Str)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if result != tc.Expected {
+				t.Fatalf("Expected substring %q, got %q", tc.Expected, result)
+			}
+		})
 	}
 }
 
 func TestInterpolateIsntGreedy(t *testing.T) {
-	environ := map[string]string{
+	environ := interpolate.NewMapEnv(map[string]string{
 		"BUILDKITE_COMMIT":       "cfeeee3fa7fa1a6311723f5cbff95b738ec6e683",
 		"BUILDKITE_PARALLEL_JOB": "456",
-	}
+	})
 
 	for _, tc := range []struct {
 		Str      string
@@ -152,10 +190,10 @@ func TestInterpolateIsntGreedy(t *testing.T) {
 }
 
 func TestDefaultValues(t *testing.T) {
-	environ := map[string]string{
+	environ := interpolate.NewMapEnv(map[string]string{
 		"DAY":       "Blarghday",
 		"EMPTY_DAY": "",
-	}
+	})
 
 	for _, tc := range []struct {
 		Str      string
@@ -167,6 +205,7 @@ func TestDefaultValues(t *testing.T) {
 		{`Today is ${EMPTY_DAY-Wednesday}`, `Today is `},
 		{`Today is ${EMPTY_DAY:-Wednesday}`, `Today is Wednesday`},
 		{`${EMPTY_DAY:--:{}}`, `-:{}`},
+		{`${EMPTY:-${LLAMAS-test}}`, `test`},
 	} {
 		result, err := interpolate.Interpolate(environ, tc.Str)
 		if err != nil {
@@ -215,7 +254,7 @@ func TestEscapingVariables(t *testing.T) {
 }
 
 func BenchmarkBasicInterpolate(b *testing.B) {
-	env := interpolate.EnvFromSlice([]string{
+	env := interpolate.NewSliceEnv([]string{
 		"HELLO_WORLD=🦀",
 	})
 
