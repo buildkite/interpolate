@@ -12,7 +12,7 @@ import (
 // This is a recursive descent parser for our grammar. Because it can contain nested expressions like
 // ${LLAMAS:-${ROCK:-true}} we can't use regular expressions. The simplest possible alternative is
 // a recursive parser like this. It parses a chunk and then calls a function to parse that further
-// and so on and so forth. It results n a tree of objects that represent the things we've parsed (an AST).
+// and so on and so forth. It results in a tree of objects that represent the things we've parsed (an AST).
 // This means that the logic for how expansions work lives in those objects, and the logic for how we go
 // from plain text to parsed objects lives here.
 //
@@ -20,7 +20,7 @@ import (
 // rather than as a dedicated lexer that emits tokens. This matches the simplicity of the format we are parsing
 // relatively well
 //
-// Below is an EBNF grammar for the language. The oarser was built by basically turning this into functions
+// Below is an EBNF grammar for the language. The parser was built by basically turning this into functions
 // and structs named the same reading the string bite by bite (peekRune and nextRune)
 
 /*
