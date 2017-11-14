@@ -146,6 +146,25 @@ func TestParser(t *testing.T) {
 				}},
 			},
 		},
+		{
+			String: `$`,
+			Expected: []interpolate.ExpressionItem{
+				{Text: `$`},
+			},
+		},
+		{
+			String: `\`,
+			Expected: []interpolate.ExpressionItem{
+				{Text: `\`},
+			},
+		},
+		{
+			String: `$(echo hello world)`,
+			Expected: []interpolate.ExpressionItem{
+				{Text: `$(`},
+				{Text: `echo hello world)`},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

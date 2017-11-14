@@ -99,12 +99,15 @@ func (p *Parser) parseExpression(stop ...rune) (Expression, error) {
 			continue
 		}
 
-		// Otherwise, we can scan as much as we can into text
+		// nibble a character, otherwise if it's a \ or a $ we can loop
+		c = p.nextRune()
+
+		// Scan as much as we can into text
 		text := p.scanUntil(func(r rune) bool {
 			return (r == '$' || r == '\\' || strings.ContainsRune(stopStr, r))
 		})
 
-		expr = append(expr, ExpressionItem{Text: text})
+		expr = append(expr, ExpressionItem{Text: string(c) + text})
 	}
 
 	return expr, nil
@@ -267,7 +270,7 @@ func (p *Parser) scanUntil(f func(rune) bool) string {
 	start := p.pos
 	for int(p.pos) < len(p.input) {
 		c, size := utf8.DecodeRuneInString(p.input[p.pos:])
-		if f(c) {
+		if c == utf8.RuneError || f(c) {
 			break
 		}
 		p.pos += size
