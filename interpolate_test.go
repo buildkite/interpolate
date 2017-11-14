@@ -87,6 +87,23 @@ func TestNestedInterpolation(t *testing.T) {
 	}
 }
 
+func TestIgnoresParentheses(t *testing.T) {
+	for _, str := range []string{
+		`$(echo hello world)`,
+		`testing $(echo hello world)`,
+		`$(`,
+	} {
+		result, err := interpolate.Interpolate(nil, str)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Logf("Result: %q", result)
+		if result != str {
+			t.Fatalf("Test %q failed: Expected substring %q, got %q", str, str, result)
+		}
+	}
+}
+
 func TestVariablesMustStartWithLetters(t *testing.T) {
 	for _, str := range []string{
 		`$1 burgers`,
