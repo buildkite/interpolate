@@ -97,7 +97,6 @@ func TestIgnoresParentheses(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		t.Logf("Result: %q", result)
 		if result != str {
 			t.Fatalf("Test %q failed: Expected substring %q, got %q", str, str, result)
 		}
