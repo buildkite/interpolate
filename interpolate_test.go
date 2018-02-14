@@ -3,6 +3,7 @@ package interpolate_test
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"testing"
 
 	"github.com/buildkite/interpolate"
@@ -265,6 +266,25 @@ func TestEscapingVariables(t *testing.T) {
 		}
 		if result != tc.Expected {
 			t.Fatalf("Test %q failed: Expected substring %q, got %q", tc.Str, tc.Expected, result)
+		}
+	}
+}
+
+func TestExtractingIdentifiers(t *testing.T) {
+	for _, tc := range []struct {
+		Str         string
+		Identifiers []string
+	}{
+		{`Hello ${REQUIRED_VAR?}`, []string{`REQUIRED_VAR`}},
+		{`${LLAMAS:-${ROCK:-true}}`, []string{`LLAMAS`, `ROCK`}},
+		{`${BUILDKITE_COMMIT:0}`, []string{`BUILDKITE_COMMIT`}},
+	} {
+		id, err := interpolate.Identifiers(tc.Str)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(id, tc.Identifiers) {
+			t.Fatalf("Test %q should have identifiers %v, got %v", tc.Str, tc.Identifiers, id)
 		}
 	}
 }
