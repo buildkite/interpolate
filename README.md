@@ -1,6 +1,8 @@
 Interpolate
 ===========
 
+[![GoDoc](https://godoc.org/github.com/buildkite/interpolate?status.svg)](https://godoc.org/github.com/buildkite/interpolate)
+
 A golang library for parameter expansion (like `${BLAH}` or `$BLAH`) in strings from environment variables. An implementation of [POSIX Parameter Expansion](http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_06_02), plus some other basic operations that you'd expect in a shell scripting environment like bash.
 
 ## Installation
@@ -20,7 +22,7 @@ import (
 )
 
 func main() {
-	env := interpolate.EnvFromSlice([]string{
+	env := interpolate.NewSliceEnv([]string{
 		"HELLO_WORLD=🦀",
 	})
 
