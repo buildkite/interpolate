@@ -82,6 +82,34 @@ func (e UnsetValueExpansion) Expand(env Env) (string, error) {
 	return val, nil
 }
 
+// RemoveExpansion returns a substring based on lookups
+type RemoveExpansion struct {
+	Identifier string
+	Pattern    string
+	Type       string
+}
+
+func (e RemoveExpansion) Identifiers() []string {
+	return []string{e.Identifier}
+}
+
+func (e RemoveExpansion) Expand(env Env) (string, error) {
+	val, _ := env.Get(e.Identifier)
+
+	switch e.Type {
+	case `#`:
+		return trimShortestPrefix(val, e.Pattern), nil
+	case `##`:
+		return trimLongestPrefix(val, e.Pattern), nil
+	case `%`:
+		return trimShortestSuffix(val, e.Pattern), nil
+	case `%%`:
+		return trimLongestSuffix(val, e.Pattern), nil
+	default:
+		return "", fmt.Errorf("$%s: %s %s", e.Identifier, "Unable to identify expansion", e.Type)
+	}
+}
+
 // SubstringExpansion returns a substring (or slice) of the env
 type SubstringExpansion struct {
 	Identifier string

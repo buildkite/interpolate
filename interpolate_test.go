@@ -289,6 +289,33 @@ func TestExtractingIdentifiers(t *testing.T) {
 	}
 }
 
+func TestRemoveShortestFromBackend(t *testing.T) {
+	environ := interpolate.NewMapEnv(map[string]string{
+		"VERSION": "123.55.66",
+	})
+
+	for _, tc := range []struct {
+		Str      string
+		Expected string
+	}{
+		{`${VERSION}`, "123.55.66"},
+		{`${VERSION%.*}`, "123.55"},
+		{`${VERSION%%.*}`, "123"},
+		{`${VERSION#*.}`, "55.66"},
+		{`${VERSION##*.}`, "66"},
+	} {
+		t.Run(tc.Str, func(t *testing.T) {
+			result, err := interpolate.Interpolate(environ, tc.Str)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if result != tc.Expected {
+				t.Fatalf("Test %q failed: Expected substring %q, got %q", tc.Str, tc.Expected, result)
+			}
+		})
+	}
+}
+
 func BenchmarkBasicInterpolate(b *testing.B) {
 	env := interpolate.NewSliceEnv([]string{
 		"HELLO_WORLD=🦀",

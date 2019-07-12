@@ -158,6 +158,14 @@ func (p *Parser) parseBraceExpansion() (Expansion, error) {
 		default:
 			operator = ":"
 		}
+	case op1 == '%' || op1 == '#':
+		switch p.peekRune() {
+		case op1:
+			_ = p.nextRune()
+			operator = string(op1) + string(op1)
+		default:
+			operator = string(op1)
+		}
 	case op1 == '?' || op1 == '-':
 		operator = string(op1)
 	default:
@@ -167,24 +175,25 @@ func (p *Parser) parseBraceExpansion() (Expansion, error) {
 	switch operator {
 	case `:-`:
 		exp, err = p.parseEmptyValueOrSubstringExpansion(identifier)
-		if err != nil {
-			return nil, err
-		}
 	case `-`:
 		exp, err = p.parseUnsetValueExpansion(identifier)
-		if err != nil {
-			return nil, err
-		}
 	case `:`:
 		exp, err = p.parseSubstringExpansion(identifier)
-		if err != nil {
-			return nil, err
-		}
 	case `?`:
 		exp, err = p.parseRequiredExpansion(identifier)
-		if err != nil {
-			return nil, err
-		}
+	case `%`:
+		exp, err = p.parseRemoveExpansion(identifier, operator)
+	case `%%`:
+		exp, err = p.parseRemoveExpansion(identifier, operator)
+	case `#`:
+		exp, err = p.parseRemoveExpansion(identifier, operator)
+	case `##`:
+		exp, err = p.parseRemoveExpansion(identifier, operator)
+	default:
+		return nil, fmt.Errorf("Expected an operator, got %s", operator)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	if c := p.nextRune(); c != '}' {
@@ -229,6 +238,14 @@ func (p *Parser) parseUnsetValueExpansion(identifier string) (Expansion, error) 
 	}
 
 	return UnsetValueExpansion{Identifier: identifier, Content: expr}, nil
+}
+
+func (p *Parser) parseRemoveExpansion(identifier string, operator string) (Expansion, error) {
+	pattern := p.scanUntil(func(r rune) bool {
+		return r == '}'
+	})
+
+	return RemoveExpansion{Identifier: identifier, Pattern: pattern, Type: operator}, nil
 }
 
 func (p *Parser) parseSubstringExpansion(identifier string) (Expansion, error) {
