@@ -36,37 +36,35 @@ func main() {
 
 ## Supported Expansions
 
-<dl>
-  <dt><code>${parameter}</code> or <code>$parameter</code></dt>
-  <dd><strong>Use value.</strong> If parameter is set, then it shall be substituted; otherwise it will be blank</dd>
+#### *`${parameter}`* or *`$parameter`*
+**Use value.** If parameter is set, then it shall be substituted; otherwise it will be blank
 
-  <dt><code>${parameter:-<em>[word]</em>}</code></dt>
-  <dd><strong>Use default values.</strong> If parameter is unset or null, the expansion of word (or an empty string if word is omitted) shall be substituted; otherwise, the value of parameter shall be substituted.</dd>
+#### *`${parameter:-[word]}`*
+**Use default values.** If parameter is unset or null, the expansion of word (or an empty string if word is omitted) shall be substituted; otherwise, the value of parameter shall be substituted.
 
-  <dt><code>${parameter-<em>[word]</em>}</code></dt>
-  <dd><strong>Use default values when not set.</strong> If parameter is unset, the expansion of word (or an empty string if word is omitted) shall be substituted; otherwise, the value of parameter shall be substituted.</dd>
+#### *`${parameter-[word]}`*
+**Use default values when not set.** If parameter is unset, the expansion of word (or an empty string if word is omitted) shall be substituted; otherwise, the value of parameter shall be substituted.
 
-  <dt><code>${parameter:<em>[offset]</em>}</code></dt>
-  <dd><strong>Use the substring of parameter after offset.</strong> A negative number will select from the end of the string. If the value is out of bounds, an empty string will be substituted.</dd>
+#### *`${parameter:[offset]}`*
+**Use the substring of parameter after offset.** A negative number will select from the end of the string. If the value is out of bounds, an empty string will be substituted.
 
-  <dt><code>${parameter:<em>[offset]</em>:<em>[length]</em>}</code></dt>
-  <dd><strong>Use the substring of parameter after offset of given length.</strong> A negative number will select from the end of the string. If the offset is out of bounds, an empty string will be substituted. If the length is greater than the length then the entire string will be returned.</dd>
+#### *`${parameter:[offset]:[length]}`*
+**Use the substring of parameter after offset of given length.** A negative number will select from the end of the string. If the offset is out of bounds, an empty string will be substituted. If the length is greater than the length then the entire string will be returned.
 
-  <dt><code>${parameter:?<em>[word]</em>}</code></dt>
-  <dd>Indicate Error if Null or Unset. If parameter is unset or null, the expansion of word (or a message indicating it is unset if word is omitted) shall be returned as an error.</dd>
+#### *`${parameter:?[word]}`*
+**Indicate Error if Null or Unset.** If parameter is unset or null, the expansion of word (or a message indicating it is unset if word is omitted) shall be returned as an error.
 
-  <dt><code>${parameter:%<em>[word]</em>}</code></dt>
-  <dd><strong>Remove Smallest Suffix Pattern.</strong> The word shall be expanded to produce a pattern. The parameter expansion shall then result in parameter, with the smallest portion of the suffix matched by the pattern deleted. If present, word shall not begin with an unquoted '%'.</dd>
+#### *`${parameter:%[word]}`*
+**Remove Smallest Suffix Pattern.** The word shall be expanded to produce a pattern. The parameter expansion shall then result in parameter, with the smallest portion of the suffix matched by the pattern deleted. If present, word shall not begin with an unquoted '%'.
 
-  <dt><code>${parameter:%%<em>[word]</em>}</code></dt>
-  <dd><strong>Remove Largest Suffix Pattern.</strong> The word shall be expanded to produce a pattern. The parameter expansion shall then result in parameter, with the largest portion of the suffix matched by the pattern deleted.</dd>
+#### *`${parameter:%%[word]}`*
+**Remove Largest Suffix Pattern.** The word shall be expanded to produce a pattern. The parameter expansion shall then result in parameter, with the largest portion of the suffix matched by the pattern deleted.
 
-  <dt><code>${parameter:#<em>[word]</em>}</code></dt>
-  <dd><strong>Remove Smallest Prefix Pattern.</strong> The word shall be expanded to produce a pattern. The parameter expansion shall then result in parameter, with the smallest portion of the prefix matched by the pattern deleted. If present, word shall not begin with an unquoted '#'.</dd>
+#### *`${parameter:#[word]}`*
+**Remove Smallest Prefix Pattern.** The word shall be expanded to produce a pattern. The parameter expansion shall then result in parameter, with the smallest portion of the prefix matched by the pattern deleted. If present, word shall not begin with an unquoted '#'.
 
-  <dt><code>${parameter:##<em>[word]</em>}</code></dt>
-  <dd><strong>Remove Largest Prefix Pattern.</strong> The word shall be expanded to produce a pattern. The parameter expansion shall then result in parameter, with the largest portion of the prefix matched by the pattern deleted.</dd>
-</dl>
+#### *`${parameter:##[word]}`*
+**Remove Largest Prefix Pattern.** The word shall be expanded to produce a pattern. The parameter expansion shall then result in parameter, with the largest portion of the prefix matched by the pattern deleted.
 
 ## License
 
