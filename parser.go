@@ -149,17 +149,18 @@ func (p *Parser) parseBraceExpansion() (Expansion, error) {
 	var operator string
 	var exp Expansion
 
-	// Parse an operator, some trickery is needed to handle : vs :-
-	if op1 := p.nextRune(); op1 == ':' {
-		if op2 := p.peekRune(); op2 == '-' {
+	switch op1 := p.nextRune(); {
+	case op1 == ':':
+		switch p.peekRune() {
+		case '-':
 			_ = p.nextRune()
 			operator = ":-"
-		} else {
+		default:
 			operator = ":"
 		}
-	} else if op1 == '?' || op1 == '-' {
+	case op1 == '?' || op1 == '-':
 		operator = string(op1)
-	} else {
+	default:
 		return nil, fmt.Errorf("Expected an operator, got %c", op1)
 	}
 
