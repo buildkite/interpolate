@@ -54,6 +54,18 @@ func main() {
 
   <dt><code>${parameter:?<em>[word]</em>}</code></dt>
   <dd>Indicate Error if Null or Unset. If parameter is unset or null, the expansion of word (or a message indicating it is unset if word is omitted) shall be returned as an error.</dd>
+
+  <dt><code>${parameter:%<em>[word]</em>}</code></dt>
+  <dd><strong>Remove Smallest Suffix Pattern.</strong> The word shall be expanded to produce a pattern. The parameter expansion shall then result in parameter, with the smallest portion of the suffix matched by the pattern deleted. If present, word shall not begin with an unquoted '%'.</dd>
+
+  <dt><code>${parameter:%%<em>[word]</em>}</code></dt>
+  <dd><strong>Remove Largest Suffix Pattern.</strong> The word shall be expanded to produce a pattern. The parameter expansion shall then result in parameter, with the largest portion of the suffix matched by the pattern deleted.</dd>
+
+  <dt><code>${parameter:#<em>[word]</em>}</code></dt>
+  <dd><strong>Remove Smallest Prefix Pattern.</strong> The word shall be expanded to produce a pattern. The parameter expansion shall then result in parameter, with the smallest portion of the prefix matched by the pattern deleted. If present, word shall not begin with an unquoted '#'.</dd>
+
+  <dt><code>${parameter:##<em>[word]</em>}</code></dt>
+  <dd><strong>Remove Largest Prefix Pattern.</strong> The word shall be expanded to produce a pattern. The parameter expansion shall then result in parameter, with the largest portion of the prefix matched by the pattern deleted.</dd>
 </dl>
 
 ## License
