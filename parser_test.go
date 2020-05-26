@@ -107,9 +107,11 @@ func TestParser(t *testing.T) {
 		{
 			String: `${HELLO_WORLD:-1}`,
 			Expected: []interpolate.ExpressionItem{
-				{Expansion: interpolate.SubstringExpansion{
+				{Expansion: interpolate.EmptyValueExpansion{
 					Identifier: "HELLO_WORLD",
-					Offset:     -1,
+					Content: interpolate.Expression([]interpolate.ExpressionItem{{
+						Text: "1",
+					}}),
 				}},
 			},
 		},
