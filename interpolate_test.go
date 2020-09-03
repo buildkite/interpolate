@@ -149,10 +149,10 @@ func TestSubstringsWithOffsets(t *testing.T) {
 		// in range offsets, no lengths
 		{`${BUILDKITE_COMMIT:0}`, `1adf998e39f647b4b25842f107c6ed9d30a3a7c7`},
 		{`${BUILDKITE_COMMIT:7}`, `e39f647b4b25842f107c6ed9d30a3a7c7`},
-		{`${BUILDKITE_COMMIT:-7}`, `0a3a7c7`},
+		{`${BUILDKITE_COMMIT: -7}`, `0a3a7c7`},
 
 		// out of range offsets, no lengths
-		{`${BUILDKITE_COMMIT:-128}`, `1adf998e39f647b4b25842f107c6ed9d30a3a7c7`},
+		{`${BUILDKITE_COMMIT: -128}`, `1adf998e39f647b4b25842f107c6ed9d30a3a7c7`},
 		{`${BUILDKITE_COMMIT:128}`, ``},
 
 		// in range offsets and lengths
@@ -223,6 +223,7 @@ func TestDefaultValues(t *testing.T) {
 		{`Today is ${EMPTY_DAY:-Wednesday}`, `Today is Wednesday`},
 		{`${EMPTY_DAY:--:{}}`, `-:{}`},
 		{`${EMPTY:-${LLAMAS-test}}`, `test`},
+		{`${EMPTY:-127}`, `127`},
 	} {
 		result, err := interpolate.Interpolate(environ, tc.Str)
 		if err != nil {

@@ -1,7 +1,6 @@
 package interpolate
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -174,7 +173,7 @@ func (p *Parser) parseBraceExpansion() (Expansion, error) {
 
 	switch operator {
 	case `:-`:
-		exp, err = p.parseEmptyValueOrSubstringExpansion(identifier)
+		exp, err = p.parseEmptyValueExpansion(identifier)
 	case `-`:
 		exp, err = p.parseUnsetValueExpansion(identifier)
 	case `:`:
@@ -203,25 +202,7 @@ func (p *Parser) parseBraceExpansion() (Expansion, error) {
 	return exp, nil
 }
 
-func (p *Parser) parseEmptyValueOrSubstringExpansion(identifier string) (Expansion, error) {
-	// as a special case, we need to return a substring operator for ${VAR:-1} and ${VAR:-1:5}
-	// this heuristic should be good enough, although it's possible we might need to parse out the entirety
-	if c := p.peekRune(); unicode.IsNumber(c) {
-		expr, err := p.parseSubstringExpansion(identifier)
-		if err != nil {
-			return nil, err
-		}
-
-		substr, ok := expr.(SubstringExpansion)
-		if !ok {
-			return nil, errors.New("Unable to convert to SubstringExpansion")
-		}
-
-		// we swallowed the negative sign, so correct for that
-		substr.Offset *= -1
-		return substr, err
-	}
-
+func (p *Parser) parseEmptyValueExpansion(identifier string) (Expansion, error) {
 	// parse an expression (text and expansions) up until the end of the brace
 	expr, err := p.parseExpression('}')
 	if err != nil {
