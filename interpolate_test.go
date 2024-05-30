@@ -260,6 +260,8 @@ func TestEscapingVariables(t *testing.T) {
 		{`Do this \$ESCAPE_PARTY`, `Do this $ESCAPE_PARTY`},
 		{`Do this $${SUCH_ESCAPE}`, `Do this ${SUCH_ESCAPE}`},
 		{`Do this \${SUCH_ESCAPE}`, `Do this ${SUCH_ESCAPE}`},
+		{`Do this $${SUCH_ESCAPE:-$OTHERWISE}`, `Do this ${SUCH_ESCAPE:-$OTHERWISE}`},
+		{`Do this \${SUCH_ESCAPE:-$OTHERWISE}`, `Do this ${SUCH_ESCAPE:-$OTHERWISE}`},
 	} {
 		result, err := interpolate.Interpolate(nil, tc.Str)
 		if err != nil {
@@ -279,11 +281,13 @@ func TestExtractingIdentifiers(t *testing.T) {
 		{`Hello ${REQUIRED_VAR?}`, []string{`REQUIRED_VAR`}},
 		{`${LLAMAS:-${ROCK:-true}}`, []string{`LLAMAS`, `ROCK`}},
 		{`${BUILDKITE_COMMIT:0}`, []string{`BUILDKITE_COMMIT`}},
+		{`$BUILDKITE_COMMIT hello there $$DOUBLE_DOLLAR \$ESCAPED_DOLLAR`, []string{`BUILDKITE_COMMIT`, `$DOUBLE_DOLLAR`, `$ESCAPED_DOLLAR`}},
 	} {
 		id, err := interpolate.Identifiers(tc.Str)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		if !reflect.DeepEqual(id, tc.Identifiers) {
 			t.Fatalf("Test %q should have identifiers %v, got %v", tc.Str, tc.Identifiers, id)
 		}

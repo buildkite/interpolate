@@ -73,8 +73,7 @@ func TestParser(t *testing.T) {
 		{
 			String: `\${HELLO_WORLD-blah}`,
 			Expected: []interpolate.ExpressionItem{
-				{Text: `$`},
-				{Text: `{HELLO_WORLD-blah}`},
+				{Expansion: interpolate.EscapedExpansion{Identifier: "{HELLO_WORLD-blah}"}},
 			},
 		},
 		{
@@ -82,8 +81,7 @@ func TestParser(t *testing.T) {
 			Expected: []interpolate.ExpressionItem{
 				{Text: `Test `},
 				{Text: `\\`},
-				{Text: `$`},
-				{Text: `{HELLO_WORLD-blah}`},
+				{Expansion: interpolate.EscapedExpansion{Identifier: "{HELLO_WORLD-blah}"}},
 			},
 		},
 		{
@@ -166,6 +164,10 @@ func TestParser(t *testing.T) {
 				{Text: `$(`},
 				{Text: `echo hello world)`},
 			},
+		},
+		{
+			String:   "$$MOUNTAIN",
+			Expected: []interpolate.ExpressionItem{{Expansion: interpolate.EscapedExpansion{Identifier: "MOUNTAIN"}}},
 		},
 	}
 
