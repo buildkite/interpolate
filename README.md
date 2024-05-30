@@ -1,6 +1,7 @@
 Interpolate
 ===========
 
+[![Build status](https://badge.buildkite.com/3d9081230a965a20d7b68d66564644febdada7f968cc6f9c9c.svg)](https://buildkite.com/buildkite/interpolate)
 [![GoDoc](https://godoc.org/github.com/buildkite/interpolate?status.svg)](https://godoc.org/github.com/buildkite/interpolate)
 
 A golang library for parameter expansion (like `${BLAH}` or `$BLAH`) in strings from environment variables. An implementation of [POSIX Parameter Expansion](http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_06_02), plus some other basic operations that you'd expect in a shell scripting environment [like bash](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html).
