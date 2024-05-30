@@ -8,6 +8,8 @@ import (
 )
 
 func TestParser(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		String   string
 		Expected []interpolate.ExpressionItem
@@ -173,6 +175,8 @@ func TestParser(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.String, func(t *testing.T) {
+			t.Parallel()
+
 			actual, err := interpolate.NewParser(tc.String).Parse()
 			if err != nil {
 				t.Fatal(err)
