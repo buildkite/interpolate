@@ -24,6 +24,8 @@ func ExampleInterpolate() {
 }
 
 func TestBasicInterpolation(t *testing.T) {
+	t.Parallel()
+
 	environ := interpolate.NewMapEnv(map[string]string{
 		"TEST1": "A test",
 		"TEST2": "Another",
@@ -49,6 +51,8 @@ func TestBasicInterpolation(t *testing.T) {
 		{`${TEST4}`, "Only one level of $TEST3 interpolation"},
 	} {
 		t.Run(tc.Str, func(t *testing.T) {
+			t.Parallel()
+
 			result, err := interpolate.Interpolate(environ, tc.Str)
 			if err != nil {
 				t.Fatal(err)
@@ -61,6 +65,8 @@ func TestBasicInterpolation(t *testing.T) {
 }
 
 func TestNestedInterpolation(t *testing.T) {
+	t.Parallel()
+
 	environ := interpolate.NewMapEnv(map[string]string{
 		"TEST1": "A test",
 		"TEST2": "Another",
@@ -77,6 +83,8 @@ func TestNestedInterpolation(t *testing.T) {
 		{`${TEST5:-Some text ${TEST2:-$TEST1} with $TEST3}`, "Some text Another with Llamas"},
 	} {
 		t.Run(tc.Str, func(t *testing.T) {
+			t.Parallel()
+
 			result, err := interpolate.Interpolate(environ, tc.Str)
 			if err != nil {
 				t.Fatal(err)
@@ -89,6 +97,8 @@ func TestNestedInterpolation(t *testing.T) {
 }
 
 func TestIgnoresParentheses(t *testing.T) {
+	t.Parallel()
+
 	for _, str := range []string{
 		`$(echo hello world)`,
 		`testing $(echo hello world)`,
@@ -105,6 +115,8 @@ func TestIgnoresParentheses(t *testing.T) {
 }
 
 func TestVariablesMustStartWithLetters(t *testing.T) {
+	t.Parallel()
+
 	for _, str := range []string{
 		`$1 burgers`,
 		`$99bottles`,
@@ -119,6 +131,8 @@ func TestVariablesMustStartWithLetters(t *testing.T) {
 }
 
 func TestMissingParameterValuesReturnEmptyStrings(t *testing.T) {
+	t.Parallel()
+
 	for _, str := range []string{
 		`$BUILDKITE_COMMIT`,
 		`${BUILDKITE_COMMIT}`,
@@ -128,6 +142,8 @@ func TestMissingParameterValuesReturnEmptyStrings(t *testing.T) {
 		`${BUILDKITE_COMMIT:7:14}`,
 	} {
 		t.Run(str, func(t *testing.T) {
+			t.Parallel()
+
 			result, err := interpolate.Interpolate(nil, str)
 			if err != nil {
 				t.Fatal(err)
@@ -140,6 +156,8 @@ func TestMissingParameterValuesReturnEmptyStrings(t *testing.T) {
 }
 
 func TestSubstringsWithOffsets(t *testing.T) {
+	t.Parallel()
+
 	environ := interpolate.NewMapEnv(map[string]string{"BUILDKITE_COMMIT": "1adf998e39f647b4b25842f107c6ed9d30a3a7c7"})
 
 	for _, tc := range []struct {
@@ -171,6 +189,8 @@ func TestSubstringsWithOffsets(t *testing.T) {
 		{`${BUILDKITE_COMMIT:7:-128}`, ``},
 	} {
 		t.Run(tc.Str, func(t *testing.T) {
+			t.Parallel()
+
 			result, err := interpolate.Interpolate(environ, tc.Str)
 			if err != nil {
 				t.Fatal(err)
@@ -183,6 +203,8 @@ func TestSubstringsWithOffsets(t *testing.T) {
 }
 
 func TestInterpolateIsntGreedy(t *testing.T) {
+	t.Parallel()
+
 	environ := interpolate.NewMapEnv(map[string]string{
 		"BUILDKITE_COMMIT":       "cfeeee3fa7fa1a6311723f5cbff95b738ec6e683",
 		"BUILDKITE_PARALLEL_JOB": "456",
@@ -207,6 +229,8 @@ func TestInterpolateIsntGreedy(t *testing.T) {
 }
 
 func TestDefaultValues(t *testing.T) {
+	t.Parallel()
+
 	environ := interpolate.NewMapEnv(map[string]string{
 		"DAY":       "Blarghday",
 		"EMPTY_DAY": "",
@@ -236,6 +260,8 @@ func TestDefaultValues(t *testing.T) {
 }
 
 func TestRequiredVariables(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range []struct {
 		Str         string
 		ExpectedErr string
@@ -252,6 +278,8 @@ func TestRequiredVariables(t *testing.T) {
 }
 
 func TestEscapingVariables(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range []struct {
 		Str      string
 		Expected string
@@ -260,6 +288,8 @@ func TestEscapingVariables(t *testing.T) {
 		{`Do this \$ESCAPE_PARTY`, `Do this $ESCAPE_PARTY`},
 		{`Do this $${SUCH_ESCAPE}`, `Do this ${SUCH_ESCAPE}`},
 		{`Do this \${SUCH_ESCAPE}`, `Do this ${SUCH_ESCAPE}`},
+		{`Do this $${SUCH_ESCAPE:-$OTHERWISE}`, `Do this ${SUCH_ESCAPE:-$OTHERWISE}`},
+		{`Do this \${SUCH_ESCAPE:-$OTHERWISE}`, `Do this ${SUCH_ESCAPE:-$OTHERWISE}`},
 	} {
 		result, err := interpolate.Interpolate(nil, tc.Str)
 		if err != nil {
@@ -272,6 +302,8 @@ func TestEscapingVariables(t *testing.T) {
 }
 
 func TestExtractingIdentifiers(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range []struct {
 		Str         string
 		Identifiers []string
@@ -279,11 +311,13 @@ func TestExtractingIdentifiers(t *testing.T) {
 		{`Hello ${REQUIRED_VAR?}`, []string{`REQUIRED_VAR`}},
 		{`${LLAMAS:-${ROCK:-true}}`, []string{`LLAMAS`, `ROCK`}},
 		{`${BUILDKITE_COMMIT:0}`, []string{`BUILDKITE_COMMIT`}},
+		{`$BUILDKITE_COMMIT hello there $$DOUBLE_DOLLAR \$ESCAPED_DOLLAR`, []string{`BUILDKITE_COMMIT`, `$DOUBLE_DOLLAR`, `$ESCAPED_DOLLAR`}},
 	} {
 		id, err := interpolate.Identifiers(tc.Str)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		if !reflect.DeepEqual(id, tc.Identifiers) {
 			t.Fatalf("Test %q should have identifiers %v, got %v", tc.Str, tc.Identifiers, id)
 		}

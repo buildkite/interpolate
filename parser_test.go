@@ -8,6 +8,8 @@ import (
 )
 
 func TestParser(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		String   string
 		Expected []interpolate.ExpressionItem
@@ -73,8 +75,7 @@ func TestParser(t *testing.T) {
 		{
 			String: `\${HELLO_WORLD-blah}`,
 			Expected: []interpolate.ExpressionItem{
-				{Text: `$`},
-				{Text: `{HELLO_WORLD-blah}`},
+				{Expansion: interpolate.EscapedExpansion{Identifier: "{HELLO_WORLD-blah}"}},
 			},
 		},
 		{
@@ -82,8 +83,7 @@ func TestParser(t *testing.T) {
 			Expected: []interpolate.ExpressionItem{
 				{Text: `Test `},
 				{Text: `\\`},
-				{Text: `$`},
-				{Text: `{HELLO_WORLD-blah}`},
+				{Expansion: interpolate.EscapedExpansion{Identifier: "{HELLO_WORLD-blah}"}},
 			},
 		},
 		{
@@ -167,10 +167,16 @@ func TestParser(t *testing.T) {
 				{Text: `echo hello world)`},
 			},
 		},
+		{
+			String:   "$$MOUNTAIN",
+			Expected: []interpolate.ExpressionItem{{Expansion: interpolate.EscapedExpansion{Identifier: "MOUNTAIN"}}},
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.String, func(t *testing.T) {
+			t.Parallel()
+
 			actual, err := interpolate.NewParser(tc.String).Parse()
 			if err != nil {
 				t.Fatal(err)

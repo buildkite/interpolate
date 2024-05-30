@@ -23,18 +23,20 @@ import (
 // and structs named the same reading the string bite by bite (peekRune and nextRune)
 
 /*
-EscapedBackslash = "\\"
-EscapedDollar    = ( "\$" | "$$")
-Identifier       = letter { letters | digit | "_" }
-Expansion        = "$" ( Identifier | Brace )
-Brace            = "{" Identifier [ Identifier BraceOperation ] "}"
-Text             = { EscapedBackslash | EscapedDollar | all characters except "$" }
-Expression       = { Text | Expansion }
-EmptyValue       = ":-" { Expression }
-UnsetValue       = "-" { Expression }
-Substring        = ":" number [ ":" number ]
-Required         = "?" { Expression }
-Operation        = EmptyValue | UnsetValue | Substring | Required
+EscapedBackslash   = "\\"
+Identifier         = letter { letters | digit | "_" }
+EscapedDollar      = ( "\$" | "$$" )
+EscapedExpansion   = EscapedDollar ( Identifier | Brace )
+UnescapedExpansion = "$" ( Identifier | Brace )
+Expansion          = UnescapedExpansion | EscapedExpansion
+Brace              = "{" Identifier [ Identifier BraceOperation ] "}"
+Text               = { EscapedBackslash | EscapedDollar | all characters except "$" }
+Expression         = { Text | Expansion }
+EmptyValue         = ":-" { Expression }
+UnsetValue         = "-" { Expression }
+Substring          = ":" number [ ":" number ]
+Required           = "?" { Expression }
+Operation          = EmptyValue | UnsetValue | Substring | Required
 */
 
 const (
@@ -75,9 +77,17 @@ func (p *Parser) parseExpression(stop ...rune) (Expression, error) {
 			p.pos += 2
 			expr = append(expr, ExpressionItem{Text: `\\`})
 			continue
-		} else if strings.HasPrefix(p.input[p.pos:], `\$`) || strings.HasPrefix(p.input[p.pos:], `$$`) {
+		}
+
+		if strings.HasPrefix(p.input[p.pos:], `\$`) || strings.HasPrefix(p.input[p.pos:], `$$`) {
 			p.pos += 2
-			expr = append(expr, ExpressionItem{Text: `$`})
+
+			ee, err := p.parseEscapedExpansion()
+			if err != nil {
+				return nil, err
+			}
+
+			expr = append(expr, ExpressionItem{Expansion: ee})
 			continue
 		}
 
@@ -110,6 +120,23 @@ func (p *Parser) parseExpression(stop ...rune) (Expression, error) {
 	}
 
 	return expr, nil
+}
+
+func (p *Parser) parseEscapedExpansion() (Expansion, error) {
+	// if it's an escaped brace expansion, (eg $${MY_COOL_VAR:-5}) consume text until the close brace
+	if c := p.peekRune(); c == '{' {
+		id := p.scanUntil(func(r rune) bool { return r == '}' })
+		id = id + string(p.nextRune()) // we know that the next rune is a close brace, chuck it on the end
+		return EscapedExpansion{Identifier: id}, nil
+	}
+
+	// otherwise, it's an escaped identifier (eg $$MY_COOL_VAR)
+	id, err := p.scanIdentifier()
+	if err != nil {
+		return nil, err
+	}
+
+	return EscapedExpansion{Identifier: id}, nil
 }
 
 func (p *Parser) parseExpansion() (Expansion, error) {
