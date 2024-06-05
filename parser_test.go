@@ -171,6 +171,14 @@ func TestParser(t *testing.T) {
 			String:   "$$MOUNTAIN",
 			Expected: []interpolate.ExpressionItem{{Expansion: interpolate.EscapedExpansion{Identifier: "MOUNTAIN"}}},
 		},
+		{
+			String: "this is a regex! /^start.*end$$/", // the dollar sign at the end of the regex has to be escaped to be treated as a literal dollar sign by this library
+			Expected: []interpolate.ExpressionItem{
+				{Text: "this is a regex! /^start.*end"},
+				{Expansion: interpolate.EscapedExpansion{Identifier: ""}},
+				{Text: "/"},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
