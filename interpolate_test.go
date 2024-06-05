@@ -290,6 +290,7 @@ func TestEscapingVariables(t *testing.T) {
 		{`Do this \${SUCH_ESCAPE}`, `Do this ${SUCH_ESCAPE}`},
 		{`Do this $${SUCH_ESCAPE:-$OTHERWISE}`, `Do this ${SUCH_ESCAPE:-$OTHERWISE}`},
 		{`Do this \${SUCH_ESCAPE:-$OTHERWISE}`, `Do this ${SUCH_ESCAPE:-$OTHERWISE}`},
+		{`echo "my favourite mountain is cotopaxi" | grep 'xi$$'`, `echo "my favourite mountain is cotopaxi" | grep 'xi$'`},
 	} {
 		result, err := interpolate.Interpolate(nil, tc.Str)
 		if err != nil {

@@ -123,20 +123,28 @@ func (p *Parser) parseExpression(stop ...rune) (Expression, error) {
 }
 
 func (p *Parser) parseEscapedExpansion() (Expansion, error) {
-	// if it's an escaped brace expansion, (eg $${MY_COOL_VAR:-5}) consume text until the close brace
-	if c := p.peekRune(); c == '{' {
+	next := p.peekRune()
+	switch {
+	case next == '{':
+		// if it's an escaped brace expansion, (eg $${MY_COOL_VAR:-5}) consume text until the close brace
 		id := p.scanUntil(func(r rune) bool { return r == '}' })
 		id = id + string(p.nextRune()) // we know that the next rune is a close brace, chuck it on the end
 		return EscapedExpansion{Identifier: id}, nil
-	}
 
-	// otherwise, it's an escaped identifier (eg $$MY_COOL_VAR)
-	id, err := p.scanIdentifier()
-	if err != nil {
-		return nil, err
-	}
+	case unicode.IsLetter(next):
+		// it's an escaped identifier (eg $$MY_COOL_VAR)
+		id, err := p.scanIdentifier()
+		if err != nil {
+			return nil, err
+		}
 
-	return EscapedExpansion{Identifier: id}, nil
+		return EscapedExpansion{Identifier: id}, nil
+
+	default:
+		// there's no identifier or brace afterward, so it's probably a literal escaped dollar sign, so return an empty identifier
+		// that will be expanded to a single dollar sign
+		return EscapedExpansion{Identifier: ""}, nil
+	}
 }
 
 func (p *Parser) parseExpansion() (Expansion, error) {
