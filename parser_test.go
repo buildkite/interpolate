@@ -1,124 +1,129 @@
-package interpolate_test
+package interpolate
 
 import (
-	"reflect"
 	"testing"
 
-	"github.com/buildkite/interpolate"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestParser(t *testing.T) {
 	t.Parallel()
 
-	var testCases = []struct {
-		String   string
-		Expected []interpolate.ExpressionItem
+	testCases := []struct {
+		input string
+		want  Expression
 	}{
 		{
-			String: `Buildkite... ${HELLO_WORLD} ${ANOTHER_VAR:-🏖}`,
-			Expected: []interpolate.ExpressionItem{
+			input: "Buildkite... ${HELLO_WORLD} ${ANOTHER_VAR:-🏖}",
+			want: Expression{
 				{Text: "Buildkite... "},
-				{Expansion: interpolate.VariableExpansion{
+				{Expansion: VariableExpansion{
 					Identifier: "HELLO_WORLD",
 				}},
 				{Text: " "},
-				{Expansion: interpolate.EmptyValueExpansion{
+				{Expansion: EmptyValueExpansion{
 					Identifier: "ANOTHER_VAR",
-					Content: interpolate.Expression([]interpolate.ExpressionItem{{
+					Content: Expression{{
 						Text: "🏖",
-					}}),
+					}},
 				}},
 			},
 		},
 		{
-			String: `${TEST1:- ${TEST2:-$TEST3}}`,
-			Expected: []interpolate.ExpressionItem{
-				{Expansion: interpolate.EmptyValueExpansion{
+			input: "${TEST1:- ${TEST2:-$TEST3}}",
+			want: Expression{
+				{Expansion: EmptyValueExpansion{
 					Identifier: "TEST1",
-					Content: interpolate.Expression([]interpolate.ExpressionItem{
+					Content: Expression{
 						{Text: " "},
-						{Expansion: interpolate.EmptyValueExpansion{
+						{Expansion: EmptyValueExpansion{
 							Identifier: "TEST2",
-							Content: interpolate.Expression([]interpolate.ExpressionItem{
-								{Expansion: interpolate.VariableExpansion{
+							Content: Expression{
+								{Expansion: VariableExpansion{
 									Identifier: "TEST3",
 								}},
-							}),
+							},
 						}},
-					}),
+					},
 				}},
 			},
 		},
 		{
-			String: `${HELLO_WORLD-blah}`,
-			Expected: []interpolate.ExpressionItem{
-				{Expansion: interpolate.UnsetValueExpansion{
+			input: "${HELLO_WORLD-blah}",
+			want: Expression{
+				{Expansion: UnsetValueExpansion{
 					Identifier: "HELLO_WORLD",
-					Content: interpolate.Expression([]interpolate.ExpressionItem{{
+					Content: Expression{{
 						Text: "blah",
-					}}),
+					}},
 				}},
 			},
 		},
 		{
-			String: `\\${HELLO_WORLD-blah}`,
-			Expected: []interpolate.ExpressionItem{
+			input: `\\${HELLO_WORLD-blah}`,
+			want: Expression{
 				{Text: `\\`},
-				{Expansion: interpolate.UnsetValueExpansion{
+				{Expansion: UnsetValueExpansion{
 					Identifier: "HELLO_WORLD",
-					Content: interpolate.Expression([]interpolate.ExpressionItem{{
+					Content: Expression{{
 						Text: "blah",
-					}}),
+					}},
 				}},
 			},
 		},
 		{
-			String: `\${HELLO_WORLD-blah}`,
-			Expected: []interpolate.ExpressionItem{
-				{Expansion: interpolate.EscapedExpansion{Identifier: "{HELLO_WORLD-blah}"}},
+			input: `\${HELLO_WORLD-blah}`,
+			want: Expression{
+				{Expansion: EscapedExpansion{
+					PotentialIdentifier: "{HELLO_WORLD-blah}",
+				}},
+				{Text: "{HELLO_WORLD-blah}"},
 			},
 		},
 		{
-			String: `Test \\\${HELLO_WORLD-blah}`,
-			Expected: []interpolate.ExpressionItem{
-				{Text: `Test `},
+			input: `Test \\\${HELLO_WORLD-blah}`,
+			want: Expression{
+				{Text: "Test "},
 				{Text: `\\`},
-				{Expansion: interpolate.EscapedExpansion{Identifier: "{HELLO_WORLD-blah}"}},
+				{Expansion: EscapedExpansion{
+					PotentialIdentifier: "{HELLO_WORLD-blah}",
+				}},
+				{Text: "{HELLO_WORLD-blah}"},
 			},
 		},
 		{
-			String: `${HELLO_WORLD:1}`,
-			Expected: []interpolate.ExpressionItem{
-				{Expansion: interpolate.SubstringExpansion{
+			input: `${HELLO_WORLD:1}`,
+			want: Expression{
+				{Expansion: SubstringExpansion{
 					Identifier: "HELLO_WORLD",
 					Offset:     1,
 				}},
 			},
 		},
 		{
-			String: `${HELLO_WORLD: -1}`,
-			Expected: []interpolate.ExpressionItem{
-				{Expansion: interpolate.SubstringExpansion{
+			input: "${HELLO_WORLD: -1}",
+			want: Expression{
+				{Expansion: SubstringExpansion{
 					Identifier: "HELLO_WORLD",
 					Offset:     -1,
 				}},
 			},
 		},
 		{
-			String: `${HELLO_WORLD:-1}`,
-			Expected: []interpolate.ExpressionItem{
-				{Expansion: interpolate.EmptyValueExpansion{
+			input: `${HELLO_WORLD:-1}`,
+			want: Expression{
+				{Expansion: EmptyValueExpansion{
 					Identifier: "HELLO_WORLD",
-					Content: interpolate.Expression([]interpolate.ExpressionItem{{
+					Content: Expression{{
 						Text: "1",
-					}}),
+					}},
 				}},
 			},
 		},
 		{
-			String: `${HELLO_WORLD:1:7}`,
-			Expected: []interpolate.ExpressionItem{
-				{Expansion: interpolate.SubstringExpansion{
+			input: `${HELLO_WORLD:1:7}`,
+			want: Expression{
+				{Expansion: SubstringExpansion{
 					Identifier: "HELLO_WORLD",
 					Offset:     1,
 					Length:     7,
@@ -127,9 +132,9 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
-			String: `${HELLO_WORLD:1:-7}`,
-			Expected: []interpolate.ExpressionItem{
-				{Expansion: interpolate.SubstringExpansion{
+			input: `${HELLO_WORLD:1:-7}`,
+			want: Expression{
+				{Expansion: SubstringExpansion{
 					Identifier: "HELLO_WORLD",
 					Offset:     1,
 					Length:     -7,
@@ -138,65 +143,78 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
-			String: `${HELLO_WORLD?Required}`,
-			Expected: []interpolate.ExpressionItem{
-				{Expansion: interpolate.RequiredExpansion{
+			input: `${HELLO_WORLD?Required}`,
+			want: Expression{
+				{Expansion: RequiredExpansion{
 					Identifier: "HELLO_WORLD",
-					Message: interpolate.Expression([]interpolate.ExpressionItem{
+					Message: Expression{
 						{Text: "Required"},
-					}),
+					},
 				}},
 			},
 		},
 		{
-			String: `$`,
-			Expected: []interpolate.ExpressionItem{
-				{Text: `$`},
+			input: `$${not actually a brace expression`,
+			want: Expression{
+				{Expansion: EscapedExpansion{}},
+				{Text: "{not actually a brace expression"},
 			},
 		},
 		{
-			String: `\`,
-			Expected: []interpolate.ExpressionItem{
+			input: "$",
+			want: Expression{
+				{Text: "$"},
+			},
+		},
+		{
+			input: `\`,
+			want: Expression{
 				{Text: `\`},
 			},
 		},
 		{
-			String: `$(echo hello world)`,
-			Expected: []interpolate.ExpressionItem{
-				{Text: `$(`},
-				{Text: `echo hello world)`},
+			input: "$(echo hello world)",
+			want: Expression{
+				{Text: "$("},
+				{Text: "echo hello world)"},
 			},
 		},
 		{
-			String:   "$$MOUNTAIN",
-			Expected: []interpolate.ExpressionItem{{Expansion: interpolate.EscapedExpansion{Identifier: "MOUNTAIN"}}},
-		},
-		{
-			String: "this is a regex! /^start.*end$$/", // the dollar sign at the end of the regex has to be escaped to be treated as a literal dollar sign by this library
-			Expected: []interpolate.ExpressionItem{
-				{Text: "this is a regex! /^start.*end"}, {Text: "$"}, {Text: "/"},
+			input: "$$MOUNTAIN",
+			want: Expression{
+				{Expansion: EscapedExpansion{PotentialIdentifier: "MOUNTAIN"}},
+				{Text: "MOUNTAIN"},
 			},
 		},
 		{
-			String: `this is a more different regex! /^start.*end\$/`, // the dollar sign at the end of the regex has to be escaped to be treated as a literal dollar sign by this library
-			Expected: []interpolate.ExpressionItem{
-				{Text: "this is a more different regex! /^start.*end"}, {Text: "$"}, {Text: "/"},
+			input: "this is a regex! /^start.*end$$/", // the dollar sign at the end of the regex has to be escaped to be treated as a literal dollar sign by this library
+			want: Expression{
+				{Text: "this is a regex! /^start.*end"},
+				{Expansion: EscapedExpansion{}},
+				{Text: "/"},
+			},
+		},
+		{
+			input: `this is a more different regex! /^start.*end\$/`, // the dollar sign at the end of the regex has to be escaped to be treated as a literal dollar sign by this library
+			want: Expression{
+				{Text: "this is a more different regex! /^start.*end"},
+				{Expansion: EscapedExpansion{}},
+				{Text: "/"},
 			},
 		},
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.String, func(t *testing.T) {
+		t.Run(tc.input, func(t *testing.T) {
 			t.Parallel()
 
-			actual, err := interpolate.NewParser(tc.String).Parse()
+			got, err := NewParser(tc.input).Parse()
 			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("NewParser(%q).Parse() error = %v", tc.input, err)
 			}
 
-			expected := interpolate.Expression(tc.Expected)
-			if !reflect.DeepEqual(expected, actual) {
-				t.Fatalf("Expected vs Actual: \n%s\n\n%s", expected, actual)
+			if diff := cmp.Diff(got, tc.want); diff != "" {
+				t.Errorf("parsed expression diff (-got +want):\n%s", diff)
 			}
 		})
 	}

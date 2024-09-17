@@ -281,25 +281,52 @@ func TestEscapingVariables(t *testing.T) {
 	t.Parallel()
 
 	for _, tc := range []struct {
-		Str      string
-		Expected string
+		input string
+		want  string
 	}{
-		{`Do this $$ESCAPE_PARTY`, `Do this $ESCAPE_PARTY`},
-		{`Do this \$ESCAPE_PARTY`, `Do this $ESCAPE_PARTY`},
-		{`Do this $${SUCH_ESCAPE}`, `Do this ${SUCH_ESCAPE}`},
-		{`Do this \${SUCH_ESCAPE}`, `Do this ${SUCH_ESCAPE}`},
-		{`Do this $${SUCH_ESCAPE:-$OTHERWISE}`, `Do this ${SUCH_ESCAPE:-$OTHERWISE}`},
-		{`Do this \${SUCH_ESCAPE:-$OTHERWISE}`, `Do this ${SUCH_ESCAPE:-$OTHERWISE}`},
-		{`Do this $${SUCH_ESCAPE:-$$OTHERWISE}`, `Do this ${SUCH_ESCAPE:-$OTHERWISE}`},
-		{`Do this \${SUCH_ESCAPE:-\$OTHERWISE}`, `Do this ${SUCH_ESCAPE:-$OTHERWISE}`},
-		{`echo "my favourite mountain is cotopaxi" | grep 'xi$$'`, `echo "my favourite mountain is cotopaxi" | grep 'xi$'`},
+		{
+			input: "Do this $$ESCAPE_PARTY",
+			want:  "Do this $ESCAPE_PARTY",
+		},
+		{
+			input: `Do this \$ESCAPE_PARTY`,
+			want:  "Do this $ESCAPE_PARTY",
+		},
+		{
+			input: "Do this $${SUCH_ESCAPE}",
+			want:  "Do this ${SUCH_ESCAPE}",
+		},
+		{
+			input: `Do this \${SUCH_ESCAPE}`,
+			want:  "Do this ${SUCH_ESCAPE}",
+		},
+		{
+			input: "Do this $${SUCH_ESCAPE:-$OTHERWISE}",
+			want:  "Do this ${SUCH_ESCAPE:-}",
+		},
+		{
+			input: `Do this \${SUCH_ESCAPE:-$OTHERWISE}`,
+			want:  "Do this ${SUCH_ESCAPE:-}",
+		},
+		{
+			input: "Do this $${SUCH_ESCAPE:-$$OTHERWISE}",
+			want:  "Do this ${SUCH_ESCAPE:-$OTHERWISE}",
+		},
+		{
+			input: `Do this \${SUCH_ESCAPE:-\$OTHERWISE}`,
+			want:  "Do this ${SUCH_ESCAPE:-$OTHERWISE}",
+		},
+		{
+			input: `echo "my favourite mountain is cotopaxi" | grep 'xi$$'`,
+			want:  `echo "my favourite mountain is cotopaxi" | grep 'xi$'`,
+		},
 	} {
-		result, err := interpolate.Interpolate(nil, tc.Str)
+		result, err := interpolate.Interpolate(nil, tc.input)
 		if err != nil {
-			t.Fatal(err)
+			t.Errorf("interpolate.Interpolate(nil, %q) error = %v", tc.input, err)
 		}
-		if result != tc.Expected {
-			t.Fatalf("Test %q failed: Expected substring %q, got %q", tc.Str, tc.Expected, result)
+		if result != tc.want {
+			t.Errorf("interpolate.Interpolate(nil, %q) = %q, want %q", tc.input, tc.want, result)
 		}
 	}
 }
