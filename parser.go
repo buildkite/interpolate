@@ -100,11 +100,12 @@ func (p *Parser) parseExpression(stop ...rune) (Expression, error) {
 
 		// If we run into a dollar sign and it's not the last char, it's an expansion
 		if c == '$' && p.pos < (len(p.input)-1) {
-			expansion, err := p.parseExpansion()
+			expressionItem, err := p.parseExpansion()
 			if err != nil {
 				return nil, err
 			}
-			expr = append(expr, ExpressionItem{Expansion: expansion})
+
+			expr = append(expr, expressionItem)
 			continue
 		}
 
@@ -158,24 +159,38 @@ func (p *Parser) parseEscapedExpansion() (EscapedExpansion, error) {
 	}
 }
 
-func (p *Parser) parseExpansion() (Expansion, error) {
+func (p *Parser) parseExpansion() (ExpressionItem, error) {
+	var empty ExpressionItem
+
 	if c := p.nextRune(); c != '$' {
-		return nil, fmt.Errorf("Expected expansion to start with $, got %c", c)
+		return empty, fmt.Errorf("Expected expansion to start with $, got %c", c)
 	}
+
+	c := p.peekRune()
 
 	// if we have an open brace, this is a brace expansion
-	if c := p.peekRune(); c == '{' {
-		return p.parseBraceExpansion()
+	if c == '{' {
+		expansion, err := p.parseBraceExpansion()
+		if err != nil {
+			return empty, err
+		}
+		return ExpressionItem{Expansion: expansion}, nil
 	}
 
+	// if not a letter, it's a literal dollar sign
+	if !unicode.IsLetter(c) {
+		return ExpressionItem{Text: "$"}, nil
+	}
+
+	// otherwise, it's a variable expansion
 	identifier, err := p.scanIdentifier()
 	if err != nil {
-		return nil, err
+		return empty, err
 	}
 
-	return VariableExpansion{
+	return ExpressionItem{Expansion: VariableExpansion{
 		Identifier: identifier,
-	}, nil
+	}}, nil
 }
 
 func (p *Parser) parseBraceExpansion() (Expansion, error) {

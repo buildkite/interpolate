@@ -114,22 +114,6 @@ func TestIgnoresParentheses(t *testing.T) {
 	}
 }
 
-func TestVariablesMustStartWithLetters(t *testing.T) {
-	t.Parallel()
-
-	for _, str := range []string{
-		`$1 burgers`,
-		`$99bottles`,
-	} {
-		_, err := interpolate.Interpolate(nil, str)
-		if err == nil {
-			t.Fatalf("Test %q should have resulted in an error", str)
-		} else {
-			t.Log(err)
-		}
-	}
-}
-
 func TestMissingParameterValuesReturnEmptyStrings(t *testing.T) {
 	t.Parallel()
 
@@ -342,6 +326,7 @@ func TestExtractingIdentifiers(t *testing.T) {
 		{`${LLAMAS:-${ROCK:-true}}`, []string{`LLAMAS`, `ROCK`}},
 		{`${BUILDKITE_COMMIT:0}`, []string{`BUILDKITE_COMMIT`}},
 		{`$BUILDKITE_COMMIT hello there $$DOUBLE_DOLLAR \$ESCAPED_DOLLAR`, []string{`BUILDKITE_COMMIT`, `$DOUBLE_DOLLAR`, `$ESCAPED_DOLLAR`}},
+		{`This $ is not a variable`, []string{}},
 	} {
 		id, err := interpolate.Identifiers(tc.Str)
 		if err != nil {
