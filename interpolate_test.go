@@ -114,22 +114,6 @@ func TestIgnoresParentheses(t *testing.T) {
 	}
 }
 
-func TestVariablesMustStartWithLetters(t *testing.T) {
-	t.Parallel()
-
-	for _, str := range []string{
-		`$1 burgers`,
-		`$99bottles`,
-	} {
-		_, err := interpolate.Interpolate(nil, str)
-		if err == nil {
-			t.Fatalf("Test %q should have resulted in an error", str)
-		} else {
-			t.Log(err)
-		}
-	}
-}
-
 func TestMissingParameterValuesReturnEmptyStrings(t *testing.T) {
 	t.Parallel()
 

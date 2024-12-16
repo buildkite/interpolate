@@ -178,7 +178,7 @@ func (p *Parser) parseExpansion() (ExpressionItem, error) {
 	}
 
 	// if not a letter, it's a literal dollar sign
-	if !unicode.IsLetter(c) && !unicode.IsNumber(c) {
+	if !unicode.IsLetter(c) {
 		return ExpressionItem{Text: "$"}, nil
 	}
 
