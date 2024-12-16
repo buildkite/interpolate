@@ -98,19 +98,18 @@ func (p *Parser) parseExpression(stop ...rune) (Expression, error) {
 			continue
 		}
 
-		// Ignore empty variable references
-		if strings.HasPrefix(p.input[p.pos:], `$ `) {
-			p.pos += 2
-			expr = append(expr, ExpressionItem{Text: `$ `})
-			continue
-		}
-
 		// If we run into a dollar sign and it's not the last char, it's an expansion
 		if c == '$' && p.pos < (len(p.input)-1) {
-			expansion, err := p.parseExpansion()
+			expansion, isLiteral, err := p.parseExpansion()
 			if err != nil {
 				return nil, err
 			}
+
+			if isLiteral {
+				expr = append(expr, ExpressionItem{Text: "$"})
+				continue
+			}
+
 			expr = append(expr, ExpressionItem{Expansion: expansion})
 			continue
 		}
@@ -165,24 +164,36 @@ func (p *Parser) parseEscapedExpansion() (EscapedExpansion, error) {
 	}
 }
 
-func (p *Parser) parseExpansion() (Expansion, error) {
+func (p *Parser) parseExpansion() (result Expansion, isLiteral bool, err error) {
 	if c := p.nextRune(); c != '$' {
-		return nil, fmt.Errorf("Expected expansion to start with $, got %c", c)
+		err = fmt.Errorf("Expected expansion to start with $, got %c", c)
+		return
 	}
+
+	c := p.peekRune()
 
 	// if we have an open brace, this is a brace expansion
-	if c := p.peekRune(); c == '{' {
-		return p.parseBraceExpansion()
+	if c == '{' {
+		result, err = p.parseBraceExpansion()
+		return
 	}
 
+	// if not a letter, it's a literal dollar sign
+	if !unicode.IsLetter(c) && !unicode.IsNumber(c) {
+		isLiteral = true
+		return
+	}
+
+	// otherwise, it's a variable expansion
 	identifier, err := p.scanIdentifier()
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	return VariableExpansion{
+	result = VariableExpansion{
 		Identifier: identifier,
-	}, nil
+	}
+	return
 }
 
 func (p *Parser) parseBraceExpansion() (Expansion, error) {
