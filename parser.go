@@ -98,6 +98,13 @@ func (p *Parser) parseExpression(stop ...rune) (Expression, error) {
 			continue
 		}
 
+		// Ignore empty variable references
+		if strings.HasPrefix(p.input[p.pos:], `$ `) {
+			p.pos += 2
+			expr = append(expr, ExpressionItem{Text: `$ `})
+			continue
+		}
+
 		// If we run into a dollar sign and it's not the last char, it's an expansion
 		if c == '$' && p.pos < (len(p.input)-1) {
 			expansion, err := p.parseExpansion()

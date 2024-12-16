@@ -342,6 +342,7 @@ func TestExtractingIdentifiers(t *testing.T) {
 		{`${LLAMAS:-${ROCK:-true}}`, []string{`LLAMAS`, `ROCK`}},
 		{`${BUILDKITE_COMMIT:0}`, []string{`BUILDKITE_COMMIT`}},
 		{`$BUILDKITE_COMMIT hello there $$DOUBLE_DOLLAR \$ESCAPED_DOLLAR`, []string{`BUILDKITE_COMMIT`, `$DOUBLE_DOLLAR`, `$ESCAPED_DOLLAR`}},
+		{`This $ is not a variable`, []string{}},
 	} {
 		id, err := interpolate.Identifiers(tc.Str)
 		if err != nil {
