@@ -53,8 +53,8 @@ func main() {
   <dt><code>${parameter:<em>[offset]</em>:<em>[length]</em>}</code></dt>
   <dd><strong>Use the substring of parameter after offset of given length.</strong> A negative offset must be separated from the colon with a space, and will select from the end of the string. If the offset is out of bounds, an empty string will be substituted. If the length is greater than the length then the entire string will be returned.</dd>
 
-  <dt><code>${parameter:?<em>[word]</em>}</code></dt>
-  <dd><strong>Indicate Error if Null or Unset.</strong> If parameter is unset or null, the expansion of word (or a message indicating it is unset if word is omitted) shall be returned as an error.</dd>
+  <dt><code>${parameter?<em>[word]</em>}</code></dt>
+  <dd><strong>Indicate Error if Unset.</strong> If parameter is unset, the expansion of word (or a message indicating it is unset if word is omitted) shall be returned as an error; otherwise, the value of parameter shall be substituted.</dd>
 
   <dt><code>$$parameter</code> or <code>\$parameter</code> or <code>$${expression}</code> or <code>\${expression}</code></dt>
   <dd><strong>An escaped interpolation.</strong> Will not be interpolated, but will be unescaped by a call to <code>interpolate.Interpolate()</code></dd>
